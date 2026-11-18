@@ -1,55 +1,53 @@
-// GLOWPATH — input: keyboard and mouse, read fresh every frame.
-// Arrows / WASD move and jump, Space or a click fires a flare, Enter confirms,
-// P or Escape pauses. The game never reads the pointer position for aiming:
-// a flare is a burst around the moth, so a click anywhere works.
-export const ACTION_CONFIRM = 'confirm';
-export const ACTION_PAUSE = 'pause';
-export const ACTION_FLARE = 'flare';
+// input.js — mouse and keyboard for LODESTAR. The mouse steers the core and its
+// button is the magnet: held = gather, released = fling. Edges (pressed and
+// released this frame) are exposed once per frame and then cleared by main.
 
-export function createInput(canvas, onAction) {
-  const keys = new Set();
-  const input = {
-    move: 0,
-    jump: false,
-    jumpPressed: false,
-    flarePressed: false,
-    consumeFlare() {
-      const f = input.flarePressed;
-      input.flarePressed = false;
-      return f;
-    },
-    consumeJump() {
-      const j = input.jumpPressed;
-      input.jumpPressed = false;
-      return j;
-    },
-  };
+export class Input {
+  constructor(canvas) {
+    this.x = 640; this.y = 360;
+    this.held = false;
+    this.pressedEdge = false;
+    this.releasedEdge = false;
+    this.pulseEdge = false;
+    this.confirmEdge = false;
+    this.pauseEdge = false;
+    this.muteEdge = false;
+    this.draftPick = 0; // 1..3 when a number key is hit on the draft screen
 
-  function updateMove() {
-    const left = keys.has('ArrowLeft') || keys.has('KeyA');
-    const right = keys.has('ArrowRight') || keys.has('KeyD');
-    input.move = (right ? 1 : 0) - (left ? 1 : 0);
-    input.jump = keys.has('ArrowUp') || keys.has('KeyW') || keys.has('Space');
+    const toGame = (e) => {
+      const r = canvas.getBoundingClientRect();
+      this.x = ((e.clientX - r.left) / r.width) * 1280;
+      this.y = ((e.clientY - r.top) / r.height) * 720;
+    };
+    canvas.addEventListener('mousemove', toGame);
+    canvas.addEventListener('mousedown', (e) => {
+      toGame(e);
+      if (e.button === 0 && !this.held) { this.held = true; this.pressedEdge = true; }
+      if (e.button === 2) this.pulseEdge = true;
+    });
+    window.addEventListener('mouseup', (e) => {
+      if (e.button === 0 && this.held) { this.held = false; this.releasedEdge = true; }
+    });
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      if (e.code === 'Space') { this.pulseEdge = true; e.preventDefault(); }
+      if (e.code === 'Enter') this.confirmEdge = true;
+      if (e.code === 'KeyP' || e.code === 'Escape') this.pauseEdge = true;
+      if (e.code === 'KeyM') this.muteEdge = true;
+      if (e.code === 'Digit1') this.draftPick = 1;
+      if (e.code === 'Digit2') this.draftPick = 2;
+      if (e.code === 'Digit3') this.draftPick = 3;
+    });
   }
 
-  window.addEventListener('keydown', (event) => {
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(event.code)) event.preventDefault();
-    if (event.repeat) return;
-    keys.add(event.code);
-    if (event.code === 'Space') input.flarePressed = true;
-    if (event.code === 'ArrowUp' || event.code === 'KeyW') input.jumpPressed = true;
-    if (event.code === 'Enter') onAction(ACTION_CONFIRM);
-    if (event.code === 'KeyP' || event.code === 'Escape') onAction(ACTION_PAUSE);
-    updateMove();
-  });
-  window.addEventListener('keyup', (event) => {
-    keys.delete(event.code);
-    updateMove();
-  });
-  canvas.addEventListener('mousedown', (event) => {
-    event.preventDefault();
-    if (event.button === 0) input.flarePressed = true;
-  });
-  canvas.addEventListener('contextmenu', (event) => event.preventDefault());
-  return input;
+  clearEdges() {
+    this.pressedEdge = false;
+    this.releasedEdge = false;
+    this.pulseEdge = false;
+    this.confirmEdge = false;
+    this.pauseEdge = false;
+    this.muteEdge = false;
+    this.draftPick = 0;
+  }
 }
