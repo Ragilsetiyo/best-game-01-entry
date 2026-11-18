@@ -1,0 +1,19 @@
+// GLOWPATH — config: every number that tunes the game lives here, in one place.
+export const VIEW = { width: 1280, height: 720 };
+export const STEP = 1 / 60;
+export const GRAVITY = 2400;
+export const MOVE_SPEED = 300;
+export const JUMP_SPEED = 880;
+export const PLAYER = { width: 26, height: 30 };
+export const LIGHT_MAX = 100;
+export const FLARE_COST = 12;
+export const FLARE_RADIUS = 170;
+export const FLARE_COOLDOWN = 0.8;
+export const LANTERN_RADIUS = 150;
+export const LANTERN_REFILL = 30;
+export const WISP_TOUCH_COST = 15;
+export const FALL_COST = 25;
+export const SHARD_SCORE = 100;
+export const WISP_SCORE = 25;
+export const BEST_KEY = 'glowpath.best';
+export const NIGHTS = 6;
